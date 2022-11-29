@@ -40,11 +40,11 @@ public class PathfindingAlgorithm
         List<Node> closed = new List<Node>();
 
         open.Add(start);
-        Node lastNode = start;
+        Node currentNode = start;
 
         while (true)
         {
-            if (lastNode == goal)
+            if (currentNode == goal)
             {
                 break;
             }
@@ -53,38 +53,38 @@ public class PathfindingAlgorithm
             {
                 Node neighbour = new Node()
                 {
-                    location = direction + lastNode.location
+                    location = direction + currentNode.location
                 };
 
-                float g = Vector2.Distance(lastNode.location, neighbour.location) + lastNode.g;
+                float g = Vector2.Distance(currentNode.location, neighbour.location) + currentNode.g;
                 float h = Vector2.Distance(neighbour.location, goal.location);
                 float f = g + h;
 
                 foreach (var item in open)
                 {
-                    if (lastNode.location == item.location)
+                    if (currentNode.location == item.location)
                     {
                         item.g = g;
                         item.h = h;
                         item.f = f;
-                        item.parent = lastNode;
+                        item.parent = currentNode;
                         continue;
                     }
                 }
 
                 for (int i = 0; i < open.Count; i++)
                 {
-                    if (lastNode.location == open[i].location)
+                    if (currentNode.location == open[i].location)
                     {
                         open[i].g = g;
                         open[i].h = h;
                         open[i].f = f;
-                        open[i].parent = lastNode;
+                        open[i].parent = currentNode;
                         continue;
                     }
                 }
 
-                open.Add(new Node(lastNode.location, g, h, f, neighbour));
+                open.Add(new Node(currentNode.location, g, h, f, neighbour));
             }
 
             open = open.OrderBy(x => x.f).ToList();
@@ -93,7 +93,7 @@ public class PathfindingAlgorithm
             closed.Add(n);
             open.RemoveAt(0);
 
-            lastNode = n;
+            currentNode = n;
         }
     }
 }

@@ -3,8 +3,51 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
-public class PathfindingAlgorithm
+public class PathfindingAlgorithm : MonoBehaviour
 {
+    public int width = 48;
+    public int height = 24;
+    public float cellSize = 16f;
+    public MyGrid grid;
+
+    private Node _start;
+    private Node _end;
+
+    private void Start()
+    {
+        grid = new MyGrid(width, height, cellSize);
+
+        // Set camera position to be in the middle and set size so you can see the entire grid
+        Camera.main.transform.position = new Vector3(grid.width * grid.cellSize / 2, grid.height * grid.cellSize / 2, -10);
+        Camera.main.orthographicSize = (grid.height * grid.cellSize / 2) + 64;
+    }
+
+    private void Update()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            Vector3 vec = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            if (!grid.IsInsideGrid(grid.GetGridXY(vec)))
+            {
+                return;
+            }
+
+            _start = new Node(grid.GetGridXY(vec));
+        }
+
+        if (Input.GetMouseButtonDown(1))
+        {
+            Vector3 vec = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            if (!grid.IsInsideGrid(grid.GetGridXY(vec)))
+            {
+                return;
+            }
+
+            _end = new Node(grid.GetGridXY(vec));
+            AStar(_start, _end);
+        }
+    }
+
     private static readonly List<Vector2> _directions = new List<Vector2>
     {
         Vector2.up,
@@ -23,6 +66,11 @@ public class PathfindingAlgorithm
 
         public Node() {}
 
+        public Node(Vector2 location)
+        {
+            this.location = location;
+        }
+
         public Node(Vector2 location, float g, float h, float f, Node parent)
         {
             this.location = location;
@@ -39,10 +87,14 @@ public class PathfindingAlgorithm
         List<Node> open = new List<Node>();
         List<Node> closed = new List<Node>();
 
-        open.Add(start);
+        start.g = 1;
+        start.h = Vector2.Distance(start.location, goal.location);
+        start.f = start.g + start.h;
+
+        open.Add(start); 
         Node currentNode = start;
 
-        while (true)
+        while (open.Count > 0)
         {
             if (currentNode == goal)
             {
@@ -51,40 +103,39 @@ public class PathfindingAlgorithm
 
             foreach (var direction in _directions)
             {
-                Node neighbour = new Node()
-                {
-                    location = direction + currentNode.location
-                };
+                Node neighbour = new Node();
+                neighbour.location = direction + currentNode.location;
 
-                float g = Vector2.Distance(currentNode.location, neighbour.location) + currentNode.g;
+                if (grid.GetGridInfo(neighbour.location) == Path.Wall)
+                {
+                    continue;
+                }
+
+                foreach (var item in closed)
+                {
+                    if (neighbour.location == item.location)
+                    {
+                        continue;
+                    }
+                }
+
+                float g = currentNode.g + 1;
                 float h = Vector2.Distance(neighbour.location, goal.location);
                 float f = g + h;
 
-                foreach (var item in open)
-                {
-                    if (currentNode.location == item.location)
-                    {
-                        item.g = g;
-                        item.h = h;
-                        item.f = f;
-                        item.parent = currentNode;
-                        continue;
-                    }
-                }
+                //foreach (var item in open)
+                //{
+                //    if (neighbour.location == item.location)
+                //    {
+                //        item.g = g;
+                //        item.h = h;
+                //        item.f = f;
+                //        item.parent = currentNode;
+                //        continue;
+                //    }
+                //}
 
-                for (int i = 0; i < open.Count; i++)
-                {
-                    if (currentNode.location == open[i].location)
-                    {
-                        open[i].g = g;
-                        open[i].h = h;
-                        open[i].f = f;
-                        open[i].parent = currentNode;
-                        continue;
-                    }
-                }
-
-                open.Add(new Node(currentNode.location, g, h, f, neighbour));
+                open.Add(new Node(neighbour.location, g, h, f, currentNode));
             }
 
             open = open.OrderBy(x => x.f).ToList();

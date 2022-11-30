@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 public class MyGrid
@@ -30,9 +31,10 @@ public class MyGrid
 
         SetRandomWalls();
         SetWalls();
+        CreateObjects();
     }
 
-    private Vector2Int GetXY(Vector3 worldPositon)
+    public Vector2Int GetGridXY(Vector3 worldPositon)
     {
         return new Vector2Int(Mathf.FloorToInt(worldPositon.x / cellSize), Mathf.FloorToInt(worldPositon.y / cellSize));
     }
@@ -42,12 +44,39 @@ public class MyGrid
         return new Vector3(x, y) * cellSize;
     }
 
+    public Path GetGridInfo(int x, int y)
+    {
+        return _grid[x, y];
+    }
+
+    public Path GetGridInfo(Vector2 vector)
+    {
+        return GetGridInfo((int)vector.x, (int)vector.y);
+    }
+
     public void SetValue(int x, int y, Path value)
     {
-        if (x >= 0 && y >= 0 && x < width && y < height)
+        if (IsInsideGrid(x, y))
         {
             _grid[x, y] = value;
         }
+    }
+
+    public bool IsInsideGrid(int x, int y)
+    {
+        return x >= 0 && x < width && y >= 0 && y < height;
+    }
+
+    public bool IsInsideGrid(Vector2 vector)
+    {
+        Vector2 v = GetGridXY(vector);
+        return IsInsideGrid((int)v.x, (int)v.y);
+    }
+
+    public void SetValue(Vector3 worldPositon, Path value)
+    {
+        Vector2Int pos = GetGridXY(worldPositon);
+        SetValue(pos.x, pos.y, value);
     }
 
     private void SetRandomWalls()
@@ -56,7 +85,10 @@ public class MyGrid
         {
             for (int y = 0; y < _grid.GetLength(1); y++)
             {
-                SetValue(x, y, Random.Range(0, 100) < 40 ? Path.Wall : Path.Empty);
+                if (Random.Range(0, 100) < 35)
+                {
+                    SetValue(x, y, Path.Wall);
+                }
             }
         }
     }
@@ -76,9 +108,25 @@ public class MyGrid
         }
     }
 
-    public void SetValue(Vector3 worldPositon, Path value)
+    private void CreateObjects()
     {
-        Vector2Int pos = GetXY(worldPositon);
-        SetValue(pos.x, pos.y, value);
+        for (int x = 0; x < _grid.GetLength(0); x++)
+        {
+            for (int y = 0; y < _grid.GetLength(1); y++)
+            {
+                GameObject obj = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                obj.transform.localScale = new Vector3(cellSize, cellSize, 0);
+                obj.transform.position = GetWorldPositon(x, y) + new Vector3(cellSize / 2, cellSize / 2, 0);
+
+                if (_grid[x, y] == Path.Wall)
+                {
+                    obj.GetComponent<MeshRenderer>().material = (Material)Resources.Load("wall");
+                }
+                else
+                {
+                    obj.GetComponent<MeshRenderer>().material = (Material)Resources.Load("empty");
+                }
+            }
+        }
     }
 }

@@ -3,35 +3,27 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
+[System.Serializable]
 public class MyGrid
 {
     public int width;
     public int height;
     public float cellSize;
     private Path[,] _grid;
+    private GameObject[,] _cubes;
 
     public MyGrid(int width, int height, float cellSize)
     {
         this.width = width;
         this.height = height;
         this.cellSize = cellSize;
+
         _grid = new Path[width, height];
+        _cubes = new GameObject[width, height];
 
-        for (int x = 0; x < _grid.GetLength(0); x++)
-        {
-            for (int y = 0; y < _grid.GetLength(1); y++)
-            {
-                Debug.DrawLine(GetWorldPositon(x, y), GetWorldPositon(x, y + 1), Color.white, Mathf.Infinity);
-                Debug.DrawLine(GetWorldPositon(x, y), GetWorldPositon(x + 1, y), Color.white, Mathf.Infinity);
-            }
-        }
-
-        Debug.DrawLine(GetWorldPositon(0, height), GetWorldPositon(width, height), Color.white, Mathf.Infinity);
-        Debug.DrawLine(GetWorldPositon(width, 0), GetWorldPositon(width, height), Color.white, Mathf.Infinity);
-
-        SetRandomWalls();
         SetWalls();
-        CreateObjects();
+        DrawFloor();
+        SetRandomWalls();
     }
 
     public Vector2Int GetGridXY(Vector3 worldPositon)
@@ -54,14 +46,6 @@ public class MyGrid
         return GetGridInfo((int)vector.x, (int)vector.y);
     }
 
-    public void SetValue(int x, int y, Path value)
-    {
-        if (IsInsideGrid(x, y))
-        {
-            _grid[x, y] = value;
-        }
-    }
-
     public bool IsInsideGrid(int x, int y)
     {
         return x >= 0 && x < width && y >= 0 && y < height;
@@ -73,10 +57,40 @@ public class MyGrid
         return IsInsideGrid((int)v.x, (int)v.y);
     }
 
-    public void SetValue(Vector3 worldPositon, Path value)
+    public void DrawFloor()
     {
-        Vector2Int pos = GetGridXY(worldPositon);
-        SetValue(pos.x, pos.y, value);
+        for (int x = 0; x < _grid.GetLength(0); x++)
+        {
+            for (int y = 0; y < _grid.GetLength(1); y++)
+            {
+                SetValue(x, y, _grid[x, y]);
+            }
+        }
+    }
+
+    public void SetValue(int x, int y, Path value)
+    {
+        if (IsInsideGrid(x, y))
+        {
+            _grid[x, y] = value;
+
+            if (_cubes[x, y] == null)
+            {
+                GameObject obj = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                obj.transform.localScale = new Vector3(cellSize, cellSize, 0);
+                obj.transform.position = GetWorldPositon(x, y) + new Vector3(cellSize / 2, cellSize / 2, 0);
+                _cubes[x, y] = obj;
+            }
+
+            if (value == Path.Wall)
+            {
+                _cubes[x, y].GetComponent<MeshRenderer>().material = (Material)Resources.Load("wall");
+            }
+            else
+            {
+                _cubes[x, y].GetComponent<MeshRenderer>().material = (Material)Resources.Load("empty");
+            }
+        }
     }
 
     private void SetRandomWalls()
@@ -93,11 +107,11 @@ public class MyGrid
         }
     }
 
-    private void SetWalls()
+    public void SetWalls()
     {
         for (int x = 0; x < width; x++)
         {
-            SetValue(x, 0, Path.Wall); 
+            SetValue(x, 0, Path.Wall);
             SetValue(x, height - 1, Path.Wall);
         }
 
@@ -105,28 +119,6 @@ public class MyGrid
         {
             SetValue(0, y, Path.Wall);
             SetValue(width - 1, y, Path.Wall);
-        }
-    }
-
-    private void CreateObjects()
-    {
-        for (int x = 0; x < _grid.GetLength(0); x++)
-        {
-            for (int y = 0; y < _grid.GetLength(1); y++)
-            {
-                GameObject obj = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                obj.transform.localScale = new Vector3(cellSize, cellSize, 0);
-                obj.transform.position = GetWorldPositon(x, y) + new Vector3(cellSize / 2, cellSize / 2, 0);
-
-                if (_grid[x, y] == Path.Wall)
-                {
-                    obj.GetComponent<MeshRenderer>().material = (Material)Resources.Load("wall");
-                }
-                else
-                {
-                    obj.GetComponent<MeshRenderer>().material = (Material)Resources.Load("empty");
-                }
-            }
         }
     }
 }

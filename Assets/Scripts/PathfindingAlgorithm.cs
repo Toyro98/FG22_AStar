@@ -1,25 +1,27 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System.Linq;
 
 public class PathfindingAlgorithm : MonoBehaviour
 {
-    public int width = 48;
-    public int height = 24;
-    public float cellSize = 16f;
     public MyGrid grid;
 
-    private Node _start;
-    private Node _end;
+    public List<Node> open = new List<Node>();
+    public List<Node> closed = new List<Node>();
+    public List<Node> path = new List<Node>();
+
+    private Node _startNode;
+    private Node _endNode;
 
     private void Start()
     {
-        grid = new MyGrid(width, height, cellSize);
+        grid = new MyGrid(grid.width, grid.height, grid.cellSize);
 
         // Set camera position to be in the middle and set size so you can see the entire grid
         Camera.main.transform.position = new Vector3(grid.width * grid.cellSize / 2, grid.height * grid.cellSize / 2, -10);
         Camera.main.orthographicSize = (grid.height * grid.cellSize / 2) + 64;
+
+        _startNode = new Node(Vector2.one);
     }
 
     private void Update()
@@ -32,7 +34,22 @@ public class PathfindingAlgorithm : MonoBehaviour
                 return;
             }
 
-            _start = new Node(grid.GetGridXY(vec));
+            _endNode = new Node(grid.GetGridXY(vec));
+            List<Node> t = AStar(_startNode, _endNode);
+
+            if (t.Count == 0)
+            {
+                Debug.Log("A* could not find a path!");
+                return;
+            }
+
+            for (int i = 0; i < t.Count - 1; i++)
+            {
+                Vector2 a = new Vector2(t[i].location.x + 0.5f, t[i].location.y + 0.5f) * grid.cellSize;
+                Vector2 b = new Vector2(t[i + 1].location.x + 0.5f, t[i + 1].location.y + 0.5f) * grid.cellSize;
+
+                Debug.DrawLine(a, b, Color.green, 1f);
+            }
         }
 
         if (Input.GetMouseButtonDown(1))
@@ -43,8 +60,17 @@ public class PathfindingAlgorithm : MonoBehaviour
                 return;
             }
 
-            _end = new Node(grid.GetGridXY(vec));
-            AStar(_start, _end);
+            Vector2Int v = grid.GetGridXY(vec);
+            //Debug.Log(grid.GetGridInfo(v));
+
+            if (grid.GetGridInfo(v) == Path.Wall)
+            {
+                grid.SetValue(v.x, v.y, Path.Empty);
+            }
+            else
+            {
+                grid.SetValue(v.x, v.y, Path.Wall);
+            }
         }
     }
 
@@ -56,95 +82,102 @@ public class PathfindingAlgorithm : MonoBehaviour
         Vector2.left
     };
 
-    public class Node
+    public List<Node> AStar(Node start, Node goal)
     {
-        public Vector2 location;
-        public float g;
-        public float h;
-        public float f;
-        public Node parent;
+        closed = new List<Node>();
+        open = new List<Node> { start };
 
-        public Node() {}
-
-        public Node(Vector2 location)
-        {
-            this.location = location;
-        }
-
-        public Node(Vector2 location, float g, float h, float f, Node parent)
-        {
-            this.location = location;
-
-            this.g = g;
-            this.h = h;
-            this.f = f;
-            this.parent = parent;
-        } 
-    }
-
-    public void AStar(Node start, Node goal)
-    {
-        List<Node> open = new List<Node>();
-        List<Node> closed = new List<Node>();
-
-        start.g = 1;
+        start.g = 0;
         start.h = Vector2.Distance(start.location, goal.location);
         start.f = start.g + start.h;
 
-        open.Add(start); 
-        Node currentNode = start;
-
         while (open.Count > 0)
         {
-            if (currentNode == goal)
+            Node current = GetLowestFNode(open);
+
+            if (current.location == goal.location)
             {
-                break;
+                goal.parent = current;
+                return GetPath(goal);
             }
+
+            open.Remove(current);
+            closed.Add(current);
 
             foreach (var direction in _directions)
             {
-                Node neighbour = new Node();
-                neighbour.location = direction + currentNode.location;
+                Node neighbor = new Node
+                {
+                    location = current.location + direction
+                };
 
-                if (grid.GetGridInfo(neighbour.location) == Path.Wall)
+                if (NeighborExistInList(closed, neighbor))
                 {
                     continue;
                 }
 
-                foreach (var item in closed)
+                if (grid.GetGridInfo(neighbor.location) != Path.Wall)
                 {
-                    if (neighbour.location == item.location)
+                    neighbor.g = current.g + 1;
+                    neighbor.h = Vector2.Distance(neighbor.location, goal.location);
+                    neighbor.f = neighbor.g + neighbor.h;
+                    neighbor.parent = current;
+
+                    if (!NeighborExistInList(open, neighbor))
                     {
-                        continue;
+                        open.Add(neighbor);
                     }
                 }
-
-                float g = currentNode.g + 1;
-                float h = Vector2.Distance(neighbour.location, goal.location);
-                float f = g + h;
-
-                //foreach (var item in open)
-                //{
-                //    if (neighbour.location == item.location)
-                //    {
-                //        item.g = g;
-                //        item.h = h;
-                //        item.f = f;
-                //        item.parent = currentNode;
-                //        continue;
-                //    }
-                //}
-
-                open.Add(new Node(neighbour.location, g, h, f, currentNode));
             }
-
-            open = open.OrderBy(x => x.f).ToList();
-            Node n = open.FirstOrDefault();
-
-            closed.Add(n);
-            open.RemoveAt(0);
-
-            currentNode = n;
         }
+
+        return new List<Node>();
+    }
+
+    private bool NeighborExistInList(List<Node> nodes, Node current)
+    {
+        foreach (var node in nodes)
+        {
+            if (current.location == node.location)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private Node GetLowestFNode(List<Node> nodes)
+    {
+        Node lowest = nodes[0];
+
+        for (int i = 0; i < nodes.Count; i++)
+        {
+            if (nodes[i].f < lowest.f)
+            {
+                lowest = nodes[i];
+            }
+        }
+
+        return lowest;
+    }
+
+    private List<Node> GetPath(Node end)
+    {
+        path = new List<Node>
+        {
+            end
+        };
+
+        Node current = end;
+
+        while (current.parent != null)
+        {
+            path.Add(current.parent);
+            current = current.parent;
+        }
+
+        path.Reverse();
+        return path;
     }
 }

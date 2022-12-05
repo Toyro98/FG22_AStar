@@ -22,7 +22,7 @@ public class MyGrid
         _cubes = new GameObject[width, height];
 
         SetWalls();
-        DrawFloor();
+        DrawGridFloor();
         SetRandomWalls();
     }
 
@@ -57,7 +57,7 @@ public class MyGrid
         return IsInsideGrid((int)v.x, (int)v.y);
     }
 
-    public void DrawFloor()
+    public void DrawGridFloor()
     {
         for (int x = 0; x < _grid.GetLength(0); x++)
         {
@@ -102,12 +102,16 @@ public class MyGrid
         {
             for (int y = 0; y < _grid.GetLength(1); y++)
             {
-                if (Random.Range(0, 100) < 35)
+                if (Random.Range(0, 100) < 30)
                 {
                     SetValue(x, y, Path.Wall);
                 }
             }
         }
+
+        SetValue(1, 1, Path.Empty);
+        SetValue(1, 2, Path.Empty);
+        SetValue(2, 1, Path.Empty);
     }
 
     public void SetWalls()

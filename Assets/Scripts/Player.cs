@@ -8,6 +8,7 @@ public class Player : MonoBehaviour
 
     [Range(1f, 10f)] public float playerSpeed = 3f;
     public Color lineColor;
+    public bool updateCurrentPath = false;
     public List<Node> currentPath = new List<Node>();
 
     private Node _startNode;
@@ -19,41 +20,58 @@ public class Player : MonoBehaviour
 
         if (Input.GetMouseButtonDown(0))
         {
-            Vector3 vec = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            if (!_algorithm.grid.IsInsideGrid(_algorithm.grid.GetGridXY(vec)))
-            {
-                return;
-            }
-
-            _startNode = new Node(new Vector2(Mathf.FloorToInt(transform.position.x), Mathf.FloorToInt(transform.position.y)));
-            _endNode = new Node(_algorithm.grid.GetGridXY(vec));
-            
-            currentPath = _algorithm.AStar(_startNode, _endNode);
-
-            if (currentPath.Count == 0)
-            {
-                Debug.Log("A* could not find a path!");
-            }
+            SetNewEndNode();
         }
 
         if (Input.GetMouseButtonDown(1))
         {
-            Vector3 cameraVector = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            if (!_algorithm.grid.IsInsideGrid(_algorithm.grid.GetGridXY(cameraVector)))
-            {
-                return;
-            }
+            ChangeGridType();
+        }
+    }
 
-            Vector2Int gridVector = _algorithm.grid.GetGridXY(cameraVector);
+    private void SetNewEndNode()
+    {
+        Vector3 cameraVector = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        if (!_algorithm.grid.IsInsideGrid(_algorithm.grid.GetGridXY(cameraVector)))
+        {
+            return;
+        }
 
-            if (_algorithm.grid.GetGridInfo(gridVector) == Path.Wall)
-            {
-                _algorithm.grid.SetValue(gridVector.x, gridVector.y, Path.Empty);
-            }
-            else
-            {
-                _algorithm.grid.SetValue(gridVector.x, gridVector.y, Path.Wall);
-            }
+        if (currentPath.Count == 0)
+        {
+            _startNode = new Node(new Vector2(Mathf.FloorToInt(transform.position.x), Mathf.FloorToInt(transform.position.y)));
+            currentPath = _algorithm.AStar(_startNode, _endNode);
+        }
+        else
+        {
+            updateCurrentPath = true;
+        }
+
+        _endNode = new Node(_algorithm.grid.GetGridXY(cameraVector));
+
+        if (currentPath.Count == 0)
+        {
+            Debug.Log("A* could not find a path!");
+        }
+    }
+
+    private void ChangeGridType()
+    {
+        Vector3 cameraVector = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        if (!_algorithm.grid.IsInsideGrid(_algorithm.grid.GetGridXY(cameraVector)))
+        {
+            return;
+        }
+
+        Vector2Int gridVector = _algorithm.grid.GetGridXY(cameraVector);
+
+        if (_algorithm.grid.GetGridInfo(gridVector) == Path.Wall)
+        {
+            _algorithm.grid.SetValue(gridVector.x, gridVector.y, Path.Empty);
+        }
+        else
+        {
+            _algorithm.grid.SetValue(gridVector.x, gridVector.y, Path.Wall);
         }
     }
 
@@ -62,10 +80,21 @@ public class Player : MonoBehaviour
         if (currentPath.Count != 0)
         {
             transform.position = Vector2.MoveTowards(transform.position, currentPath[0].position, playerSpeed * Time.deltaTime);
-
-            if (Vector2.Distance(transform.position, currentPath[0].position) < 0.01f)
+            
+            if (updateCurrentPath)
             {
-                currentPath.RemoveAt(0);
+                if (Vector2.Distance(transform.position, currentPath[0].position) < 0.01f)
+                {
+                    currentPath = new List<Node>(_algorithm.AStar(new Node(currentPath[0].position), _endNode));
+                    updateCurrentPath = false;
+                }
+            }
+            else
+            {
+                if (Vector2.Distance(transform.position, currentPath[0].position) < 0.01f)
+                {
+                    currentPath.RemoveAt(0);
+                }
             }
 
             for (int i = 0; i < currentPath.Count - 1; i++)

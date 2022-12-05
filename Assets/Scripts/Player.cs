@@ -4,19 +4,25 @@ using UnityEngine;
 public class Player : MonoBehaviour
 {
     [SerializeField] PathfindingAlgorithm _algorithm;
-    [SerializeField] GameObject _test;
 
-    [Range(1f, 10f)] public float playerSpeed = 5f;
+    [Range(1f, 10f)] 
+    public float playerSpeed = 5f;
     public Color lineColor;
-    public bool updateCurrentPath = false;
     public List<Node> currentPath = new List<Node>();
 
     private Node _startNode;
     private Node _endNode;
+    private bool _updateCurrentPath = false;
+    private bool _gridLayoutChanged = false;
+
+    private void Start()
+    {
+        FindObjectOfType<Canvas>().gameObject.SetActive(false);
+    }
 
     private void Update()
     {
-        MovePlayer();
+        MoveCube();
 
         if (Input.GetMouseButtonDown(0))
         {
@@ -46,7 +52,7 @@ public class Player : MonoBehaviour
         }
         else
         {
-            updateCurrentPath = true;
+            _updateCurrentPath = true;
         }
 
         if (currentPath.Count == 0)
@@ -73,20 +79,23 @@ public class Player : MonoBehaviour
         {
             _algorithm.grid.SetValue(gridVector.x, gridVector.y, Path.Wall);
         }
+
+        _gridLayoutChanged = true;
     }
 
-    private void MovePlayer()
+    private void MoveCube()
     {
         if (currentPath.Count != 0)
         {
             transform.position = Vector2.MoveTowards(transform.position, currentPath[0].position, playerSpeed * Time.deltaTime);
             
-            if (updateCurrentPath)
+            if (_updateCurrentPath || _gridLayoutChanged)
             {
                 if (Vector2.Distance(transform.position, currentPath[0].position) < 0.01f)
                 {
                     currentPath = new List<Node>(_algorithm.AStar(new Node(currentPath[0].position), _endNode));
-                    updateCurrentPath = false;
+                    _updateCurrentPath = false;
+                    _gridLayoutChanged = false;
                 }
             }
             else

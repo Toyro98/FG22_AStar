@@ -6,7 +6,7 @@ public class Player : MonoBehaviour
     [SerializeField] PathfindingAlgorithm _algorithm;
     [SerializeField] GameObject _test;
 
-    [Range(1f, 10f)] public float playerSpeed = 3f;
+    [Range(1f, 10f)] public float playerSpeed = 5f;
     public Color lineColor;
     public bool updateCurrentPath = false;
     public List<Node> currentPath = new List<Node>();
@@ -37,6 +37,8 @@ public class Player : MonoBehaviour
             return;
         }
 
+        _endNode = new Node(_algorithm.grid.GetGridXY(cameraVector));
+
         if (currentPath.Count == 0)
         {
             _startNode = new Node(new Vector2(Mathf.FloorToInt(transform.position.x), Mathf.FloorToInt(transform.position.y)));
@@ -46,8 +48,6 @@ public class Player : MonoBehaviour
         {
             updateCurrentPath = true;
         }
-
-        _endNode = new Node(_algorithm.grid.GetGridXY(cameraVector));
 
         if (currentPath.Count == 0)
         {

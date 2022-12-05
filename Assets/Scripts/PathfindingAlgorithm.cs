@@ -11,10 +11,8 @@ public class PathfindingAlgorithm : MonoBehaviour
     {
         grid = new MyGrid(grid.width, grid.height, transform);
 
-        // Set camera position to be in the middle and set size so you can see the entire grid
         Camera.main.transform.position = new Vector3(grid.width / 2, grid.height / 2, -10);
         Camera.main.orthographicSize = 16;
-        //Camera.main.orthographicSize = (grid.height * grid.cellSize / 2) + 64;
     }
 
     private static readonly List<Vector2> _directions = new List<Vector2>

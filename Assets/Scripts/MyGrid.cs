@@ -1,6 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 
 [System.Serializable]
@@ -9,14 +6,17 @@ public class MyGrid
     public int width;
     public int height;
     public float cellSize;
+    public Transform transform;
+
     private Path[,] _grid;
     private GameObject[,] _cubes;
 
-    public MyGrid(int width, int height, float cellSize)
+    public MyGrid(int width, int height, float cellSize, Transform transform)
     {
         this.width = width;
         this.height = height;
         this.cellSize = cellSize;
+        this.transform = transform;
 
         _grid = new Path[width, height];
         _cubes = new GameObject[width, height];
@@ -77,8 +77,11 @@ public class MyGrid
             if (_cubes[x, y] == null)
             {
                 GameObject obj = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                obj.name = $"Grid [{x},{y}]";
+                obj.transform.SetParent(transform);
                 obj.transform.localScale = new Vector3(cellSize, cellSize, 0);
                 obj.transform.position = GetWorldPositon(x, y) + new Vector3(cellSize / 2, cellSize / 2, 0);
+
                 _cubes[x, y] = obj;
             }
 

@@ -9,10 +9,10 @@ public class PathfindingAlgorithm : MonoBehaviour
 
     private void Start()
     {
-        grid = new MyGrid(grid.width, grid.height, grid.cellSize, transform);
+        grid = new MyGrid(grid.width, grid.height, transform);
 
         // Set camera position to be in the middle and set size so you can see the entire grid
-        Camera.main.transform.position = new Vector3(grid.width * grid.cellSize / 2, grid.height * grid.cellSize / 2, -10);
+        Camera.main.transform.position = new Vector3(grid.width / 2, grid.height / 2, -10);
         Camera.main.orthographicSize = 16;
         //Camera.main.orthographicSize = (grid.height * grid.cellSize / 2) + 64;
     }

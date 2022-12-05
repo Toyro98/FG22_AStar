@@ -108,8 +108,8 @@ public class Player : MonoBehaviour
 
             for (int i = 0; i < currentPath.Count - 1; i++)
             {
-                Vector2 a = new Vector2(currentPath[i].position.x + 0.5f, currentPath[i].position.y + 0.5f) * _algorithm.grid.cellSize;
-                Vector2 b = new Vector2(currentPath[i + 1].position.x + 0.5f, currentPath[i + 1].position.y + 0.5f) * _algorithm.grid.cellSize;
+                Vector2 a = new Vector2(currentPath[i].position.x + 0.5f, currentPath[i].position.y + 0.5f);
+                Vector2 b = new Vector2(currentPath[i + 1].position.x + 0.5f, currentPath[i + 1].position.y + 0.5f);
 
                 Debug.DrawLine(a, b, lineColor, Time.deltaTime);
             }

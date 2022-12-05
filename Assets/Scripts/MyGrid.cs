@@ -5,17 +5,15 @@ public class MyGrid
 {
     public int width;
     public int height;
-    public float cellSize;
     public Transform transform;
 
     private Path[,] _grid;
     private GameObject[,] _cubes;
 
-    public MyGrid(int width, int height, float cellSize, Transform transform)
+    public MyGrid(int width, int height, Transform transform)
     {
         this.width = width;
         this.height = height;
-        this.cellSize = cellSize;
         this.transform = transform;
 
         _grid = new Path[width, height];
@@ -28,12 +26,7 @@ public class MyGrid
 
     public Vector2Int GetGridXY(Vector3 worldPositon)
     {
-        return new Vector2Int(Mathf.FloorToInt(worldPositon.x / cellSize), Mathf.FloorToInt(worldPositon.y / cellSize));
-    }
-
-    private Vector3 GetWorldPositon(int x, int y)
-    {
-        return new Vector3(x, y) * cellSize;
+        return new Vector2Int(Mathf.FloorToInt(worldPositon.x), Mathf.FloorToInt(worldPositon.y));
     }
 
     public Path GetGridInfo(int x, int y)
@@ -79,8 +72,7 @@ public class MyGrid
                 GameObject obj = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 obj.name = $"Grid [{x},{y}]";
                 obj.transform.SetParent(transform);
-                obj.transform.localScale = new Vector3(cellSize, cellSize, 0);
-                obj.transform.position = GetWorldPositon(x, y) + new Vector3(cellSize / 2, cellSize / 2, 0);
+                obj.transform.position = new Vector3(x, y) + new Vector3(.5f, .5f, 0);
 
                 _cubes[x, y] = obj;
             }

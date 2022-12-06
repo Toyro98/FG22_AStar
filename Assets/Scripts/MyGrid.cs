@@ -5,21 +5,26 @@ public class MyGrid
 {
     public int width;
     public int height;
-    public Transform transform;
+    public Transform gridParent;
 
-    private Path[,] _grid;
-    private GameObject[,] _cubes;
+    [Range(0.05f, 0.5f)]
+    [Tooltip("If it's lower than the current value, it will create a wall")]
+    public float createWallOdds = 0.3f;
 
-    public MyGrid(int width, int height, Transform transform)
+    private readonly Path[,] _grid;
+    private readonly GameObject[,] _cubes;
+
+    public MyGrid(MyGrid grid)
     {
-        this.width = width;
-        this.height = height;
-        this.transform = transform;
+        width = grid.width;
+        height = grid.height;
+        createWallOdds = grid.createWallOdds;
+        gridParent = grid.gridParent;
 
         _grid = new Path[width, height];
         _cubes = new GameObject[width, height];
 
-        SetWalls();
+        SetBorderWalls();
         DrawGridFloor();
         SetRandomWalls();
     }
@@ -56,12 +61,12 @@ public class MyGrid
         {
             for (int y = 0; y < _grid.GetLength(1); y++)
             {
-                SetValue(x, y, _grid[x, y]);
+                SetGridType(x, y, _grid[x, y]);
             }
         }
     }
 
-    public void SetValue(int x, int y, Path value)
+    public void SetGridType(int x, int y, Path value)
     {
         if (IsInsideGrid(x, y))
         {
@@ -71,20 +76,13 @@ public class MyGrid
             {
                 GameObject obj = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 obj.name = $"Grid [{x},{y}]";
-                obj.transform.SetParent(transform);
+                obj.transform.SetParent(gridParent);
                 obj.transform.position = new Vector3(x, y) + new Vector3(.5f, .5f, 0);
 
                 _cubes[x, y] = obj;
             }
 
-            if (value == Path.Wall)
-            {
-                _cubes[x, y].GetComponent<MeshRenderer>().material = (Material)Resources.Load("wall");
-            }
-            else
-            {
-                _cubes[x, y].GetComponent<MeshRenderer>().material = (Material)Resources.Load("empty");
-            }
+            _cubes[x, y].GetComponent<MeshRenderer>().material = (Material)Resources.Load(value == Path.Wall ? "wall" : "empty");
         }
     }
 
@@ -94,30 +92,30 @@ public class MyGrid
         {
             for (int y = 0; y < _grid.GetLength(1); y++)
             {
-                if (Random.Range(0, 100) < 30)
+                if (Random.value < createWallOdds)
                 {
-                    SetValue(x, y, Path.Wall);
+                    SetGridType(x, y, Path.Wall);
                 }
             }
         }
 
-        SetValue(1, 1, Path.Empty);
-        SetValue(1, 2, Path.Empty);
-        SetValue(2, 1, Path.Empty);
+        SetGridType(1, 1, Path.Empty);
+        SetGridType(1, 2, Path.Empty);
+        SetGridType(2, 1, Path.Empty);
     }
 
-    public void SetWalls()
+    public void SetBorderWalls()
     {
         for (int x = 0; x < width; x++)
         {
-            SetValue(x, 0, Path.Wall);
-            SetValue(x, height - 1, Path.Wall);
+            SetGridType(x, 0, Path.Wall);
+            SetGridType(x, height - 1, Path.Wall);
         }
 
         for (int y = 0; y < height; y++)
         {
-            SetValue(0, y, Path.Wall);
-            SetValue(width - 1, y, Path.Wall);
+            SetGridType(0, y, Path.Wall);
+            SetGridType(width - 1, y, Path.Wall);
         }
     }
 }

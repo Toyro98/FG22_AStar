@@ -76,11 +76,11 @@ public class Player : MonoBehaviour
 
         if (_algorithm.grid.GetGridInfo(gridVector) == Path.Wall)
         {
-            _algorithm.grid.SetValue(gridVector.x, gridVector.y, Path.Empty);
+            _algorithm.grid.SetGridType(gridVector.x, gridVector.y, Path.Empty);
         }
         else
         {
-            _algorithm.grid.SetValue(gridVector.x, gridVector.y, Path.Wall);
+            _algorithm.grid.SetGridType(gridVector.x, gridVector.y, Path.Wall);
         }
 
         _gridLayoutChanged = true;

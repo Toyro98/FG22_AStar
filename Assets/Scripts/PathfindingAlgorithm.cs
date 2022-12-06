@@ -9,10 +9,9 @@ public class PathfindingAlgorithm : MonoBehaviour
 
     private void Start()
     {
-        grid = new MyGrid(grid.width, grid.height, transform);
+        grid = new MyGrid(grid);
 
         Camera.main.transform.position = new Vector3(grid.width / 2, grid.height / 2, -10);
-        Camera.main.orthographicSize = 16;
     }
 
     private static readonly List<Vector2> _directions = new List<Vector2>

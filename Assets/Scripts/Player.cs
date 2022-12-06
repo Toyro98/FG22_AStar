@@ -15,6 +15,9 @@ public class Player : MonoBehaviour
     private bool _updateCurrentPath = false;
     private bool _gridLayoutChanged = false;
 
+    private const float MinimumDistance = 0.01f;
+    private const float Offset = 0.5f;
+
     private void Start()
     {
         FindObjectOfType<Canvas>().gameObject.SetActive(false);
@@ -91,7 +94,7 @@ public class Player : MonoBehaviour
             
             if (_updateCurrentPath || _gridLayoutChanged)
             {
-                if (Vector2.Distance(transform.position, currentPath[0].position) < 0.01f)
+                if (Vector2.Distance(transform.position, currentPath[0].position) < MinimumDistance)
                 {
                     currentPath = new List<Node>(_algorithm.AStar(new Node(currentPath[0].position), _endNode));
                     _updateCurrentPath = false;
@@ -100,7 +103,7 @@ public class Player : MonoBehaviour
             }
             else
             {
-                if (Vector2.Distance(transform.position, currentPath[0].position) < 0.01f)
+                if (Vector2.Distance(transform.position, currentPath[0].position) < MinimumDistance)
                 {
                     currentPath.RemoveAt(0);
                 }
@@ -108,8 +111,8 @@ public class Player : MonoBehaviour
 
             for (int i = 0; i < currentPath.Count - 1; i++)
             {
-                Vector2 a = new Vector2(currentPath[i].position.x + 0.5f, currentPath[i].position.y + 0.5f);
-                Vector2 b = new Vector2(currentPath[i + 1].position.x + 0.5f, currentPath[i + 1].position.y + 0.5f);
+                Vector2 a = new Vector2(currentPath[i].position.x + Offset, currentPath[i].position.y + Offset);
+                Vector2 b = new Vector2(currentPath[i + 1].position.x + Offset, currentPath[i + 1].position.y + Offset);
 
                 Debug.DrawLine(a, b, lineColor, Time.deltaTime);
             }

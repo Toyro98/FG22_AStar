@@ -111,11 +111,18 @@ public class Player : MonoBehaviour
 
             for (int i = 0; i < currentPath.Count - 1; i++)
             {
-                Vector2 a = new Vector2(currentPath[i].position.x + Offset, currentPath[i].position.y + Offset);
-                Vector2 b = new Vector2(currentPath[i + 1].position.x + Offset, currentPath[i + 1].position.y + Offset);
+                DrawDebugLine(currentPath[i].position, currentPath[i + 1].position);
+            }
 
-                Debug.DrawLine(a, b, lineColor, Time.deltaTime);
+            if (currentPath.Count != 0)
+            {
+                DrawDebugLine(transform.position, currentPath[0].position);
             }
         }
+    }
+
+    private void DrawDebugLine(Vector2 start, Vector2 end)
+    {
+        Debug.DrawLine(new Vector2(start.x + Offset, start.y + Offset), new Vector2(end.x + Offset, end.y + Offset), lineColor, Time.deltaTime);
     }
 }
